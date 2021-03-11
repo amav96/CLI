@@ -1,0 +1,5 @@
+created() {
+
+ se ejecuta automaticamente antes del template 
+
+}
