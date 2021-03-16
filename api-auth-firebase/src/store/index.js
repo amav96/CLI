@@ -12,7 +12,8 @@ export default createStore({
       numero: 0,
     
     },
-    user: null
+    user: null,
+    error: {tipo: null, mensaje: null}
   },
   mutations: {
     setUser(state,payload){
@@ -54,10 +55,73 @@ export default createStore({
       // empujamos a la pagina raiz
       router.push('/')
       
+    },
+    setError(state, payload){
+      if(payload === null){
+
+        return state.error = {tipo: null, mensaje: null}
+
+      }
+
+      if(payload === 'EMAIL_NOT_FOUND'){
+
+        return state.error = {tipo: 'email', mensaje: 'Email inválido'}
+      }
+      if(payload === 'INVALID_PASSWORD'){
+
+        return state.error = {tipo: 'password', mensaje: 'Contraseña inválida'}
+      }
+      if(payload === 'EMAIL_EXISTS'){
+
+        return state.error = {tipo: 'email', mensaje: 'Email ya registrado'}
+      }
+      if(payload === 'INVALID_EMAIL'){
+
+        return state.error = {tipo: 'email', mensaje: 'Formato incorrecto de email'}
+      }
+
+      
     }
 
   },
   actions: {
+    cerrarSesion({commit}){
+
+      commit('setUser',null)
+      router.push('/ingreso')
+      localStorage.removeItem('usuario')
+ 
+    },
+    async ingresoUsuario({commit},usuario){
+      
+      try {
+        const res = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyA8pjOXafRs-xrWHPEhlLfjAjTmEC7UGzU',{
+          method: 'POST',
+          body: JSON.stringify({
+            email: usuario.email,
+            password: usuario.password,
+            returnSecureToken: true
+          })
+
+        })
+        const userDB = await res.json()
+        console.log('userDB',userDB)
+        if(userDB.error){
+
+          console.log(userDB.error)
+          return commit('setError',userDB.error.message)
+
+        }
+        commit('setUser',userDB)
+        commit('setError',null)
+
+        router.push('/')
+        localStorage.setItem('usuario', JSON.stringify(userDB))
+
+      } catch (error) {
+        console.log(error)
+      }
+    },
    async registrarUsuario({commit},usuario){
 
       try {
@@ -71,24 +135,39 @@ export default createStore({
           })
         })
         const userDB = await res.json()
-        console.log(userDB)
+        // console.log(userDB)
 
         if(userDB.error){
+
           console.log(userDB.error)
-          return
+          return commit('setError',userDB.error.message)
+
         }
 
         commit('setUser', userDB)
+        commit('setError',null)
+
+        router.push('/')
+        localStorage.setItem('usuario', JSON.stringify(userDB))
 
       } catch (error) {
         console.log(error)
       }
 
     },
-   async  getData({commit}){
+   async  getData({commit, state}){
+
+    if(localStorage.getItem('usuario')){
+
+      commit('setUser',JSON.parse(localStorage.getItem('usuario')))
+    }else{
+
+      return  commit('setUser',null)
+    }
+
      try {
 
-      const res = await fetch(`https://udemy-curso-7ad1c-default-rtdb.firebaseio.com/tareas.json`)
+      const res = await fetch(`https://udemy-curso-7ad1c-default-rtdb.firebaseio.com/tareas/${state.user.localId}.json?auth=${state.user.idToken}`)
       // es GET por defecto
       const dataDB = await res.json()
 
@@ -108,10 +187,10 @@ export default createStore({
   },
     //recibe la tarea que lleno el usuario
     // creo un metodo para setear tareas
-    async setTareas({commit},tarea){
+    async setTareas({commit,state},tarea){
 
       try {
-        const res =  await fetch(`https://udemy-curso-7ad1c-default-rtdb.firebaseio.com/tareas/${tarea.id}.json`,{
+        const res =  await fetch(`https://udemy-curso-7ad1c-default-rtdb.firebaseio.com/tareas/${state.user.localId}/${tarea.id}.json?auth=${state.user.idToken}`,{
            method: 'PUT',
            headers:{
               'Content-Type': 'application/json'
@@ -120,7 +199,7 @@ export default createStore({
          })
 
          const dataDB =  await res.json()
-         console.log(dataDB)
+        //  console.log(dataDB)
         
       } catch (error) {
         console.log(error)
@@ -131,10 +210,10 @@ export default createStore({
       commit('set',tarea)
        
     },
-    async deleteTareas({commit},id){
+    async deleteTareas({commit, state},id){
 
       try {
-        await fetch(`https://udemy-curso-7ad1c-default-rtdb.firebaseio.com/tareas/${id}.json`,{
+        await fetch(`https://udemy-curso-7ad1c-default-rtdb.firebaseio.com/tareas/${state.user.localId}/${id}.json?auth=${state.user.idToken}`,{
           method: 'DELETE'
         })
 
@@ -147,14 +226,14 @@ export default createStore({
      
 
     },
-    editarTareas({commit},id){
+    editarTareas({commit, state},id){
       // enviar a una mutacion
       commit('tarea',id)
     },
     async updateTareas({commit},tarea){
 
       try {
-        const res = await fetch(`https://udemy-curso-7ad1c-default-rtdb.firebaseio.com/tareas/${tarea.id}.json`,{
+        const res = await fetch(`https://udemy-curso-7ad1c-default-rtdb.firebaseio.com/tareas/${state.user.localId}/${tarea.id}.json?auth=${state.user.idToken}`,{
           method : 'PATCH',
           body: JSON.stringify(tarea)
         })
@@ -172,6 +251,15 @@ export default createStore({
 
 
   },
+  getters:{
+    usuarioAutenticado(state){
+      // si no existe retorna falso y si existe retorna true
+      return !!state.user
+    }
+
+  }
+  ,
+
   modules: {
   }
 })

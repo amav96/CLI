@@ -40,21 +40,21 @@ export default {
   },
   methods:{
 //  llamo al metodo que esta en el store. LO mapeo para poder usarlo en methods
-    ...mapActions(['setTareas']),
+    ...mapActions(['setTareas','getData']),
 
     procesarFormulario(){
-      console.log(this.tarea)
+      // console.log(this.tarea)
       if(this.tarea.nombre.trim() === ''){
         console.log("nombre vacio")
         return
 
       }
-      console.log("no esta vacio")
+      // console.log("no esta vacio")
 
       // generar id
 
       this.tarea.id = shortid.generate()
-      console.log(this.tarea.id)
+      // console.log(this.tarea.id)
 
       //enviar los datos 
 
@@ -71,6 +71,9 @@ export default {
       
       }
     }
+  },
+  created(){
+    this.getData()
   }
 }
 </script>
