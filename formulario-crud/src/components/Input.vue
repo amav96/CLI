@@ -88,6 +88,10 @@
 </template>
 
 <script>
+
+const { validationMixin, default: Vuelidate } = require('vuelidate')
+const { required, minLength } = require('vuelidate/lib/validators')
+
 export default {
     props : {
         tarea: Object

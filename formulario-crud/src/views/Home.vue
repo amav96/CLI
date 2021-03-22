@@ -1,12 +1,18 @@
 <template>
  
  <h1 class="my-5" > Formularios con Vue.js </h1>
+
+ <div v-if="carga" class="text-center my-5"> 
+   <h3>Cargando contenido...</h3>
+   <pulse-loader :loading="carga" ></pulse-loader>
+ </div>
+
  <form @submit.prevent="procesarFormulario">
    <Input :tarea="tarea"/>
  </form>
 
   <hr>
-  <ListaTareas/>
+  <ListaTareas v-if="!carga"/>
   
 
 
@@ -16,7 +22,9 @@
 // @ is an alias to /src
 import Input from '../components/Input'
 import ListaTareas from '../components/ListaTareas'
-import {mapActions} from 'vuex'
+import {mapActions,mapState} from 'vuex'
+import PulseLoader from 'vue-spinner/src/PulseLoader.vue'
+
 const shortid = require('shortid')
 
 
@@ -24,7 +32,8 @@ export default {
   name: 'Home',
   components: {
    Input,
-   ListaTareas
+   ListaTareas,
+   PulseLoader
   },
   data() {
     return{
@@ -37,6 +46,9 @@ export default {
       
       }
     }
+  },
+  computed :{
+      ...mapState(['carga'])
   },
   methods:{
 //  llamo al metodo que esta en el store. LO mapeo para poder usarlo en methods

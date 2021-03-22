@@ -10,6 +10,7 @@ export default createStore({
       categorias: [],
       estado : '',
       numero: 0,
+      carga : false
     
     }
   },
@@ -49,19 +50,34 @@ export default createStore({
       // empujamos a la pagina raiz
       router.push('/')
       localStorage.setItem('tareas',JSON.stringify(state.tareas))
+    },
+    cargarFirebase(state,payload){
+      state.carga = payload
     }
 
   },
   actions: {
     carLocalStorage({commit}){
+
+      commit('cargarFirebase', true )
+
       if(localStorage.getItem('tareas')){
         
         const tareasLs = JSON.parse(localStorage.getItem('tareas'))
         commit('cargar',tareasLs)
+
+    
+        setTimeout(() =>{
+
+          commit('cargarFirebase', false )
+        },2000)
+        
         return
 
       }
+
       localStorage.setItem('tareas',JSON.stringify([]))
+    
   },
     //recibe la tarea que lleno el usuario
     // creo un metodo para setear tareas
