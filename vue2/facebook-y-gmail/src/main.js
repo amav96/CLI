@@ -9,6 +9,9 @@ import 'vuetify/dist/vuetify.min.css'
 
 import {auth } from '@/firebase'
 
+import VueChatScroll from 'vue-chat-scroll'
+Vue.use(VueChatScroll)
+
 Vue.use(Vuetify)
 
 auth.onAuthStateChanged((user) => {
